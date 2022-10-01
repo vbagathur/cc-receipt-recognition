@@ -3,6 +3,8 @@ var http = require('http');
 var jsdom = require('jsdom');
 var { JSDOM } = jsdom;
 var fs = require('fs');
+let formidable = require('formidable');
+const { url } = require('inspector');
 var port = process.env.PORT || 8092;
 var dbOperations = require('./databaseOperations.js');
 var utils = require('./utils.js');
@@ -15,6 +17,9 @@ if(process.env.NODE_ENV == "production"){
 
 var server = http.createServer(function (req, res) {
     var reqUrl = req.url.replace(/^\/+|\/+$/g, '');
+
+    //Create an instance of the form object
+    let form = new formidable.IncomingForm();
     if(!reqUrl || (!!reqUrl && (reqUrl == "" || reqUrl.toLowerCase() == "index.html"))){
         var data = fs.readFileSync('index.html');
         dbOperations.addRecord("index", function(){
@@ -40,6 +45,49 @@ var server = http.createServer(function (req, res) {
         data = fs.readFileSync("img/successCloudNew.svg");
         res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Content-Length': data.length });
         res.write(data);
+        res.end();
+    }  
+    //Process the file upload in Node
+    else if (reqUrl.toLowerCase() == 'upload') {
+      form.parse(req, function (error, fields, file) {
+            let filepth = '';
+
+            try {
+
+                filepth = file.fileupload.filepath;
+                console.log('file.fileupload.filepath'+filepth);
+            }catch (e){
+                console.log(e.message);
+            }
+
+            try {
+
+                let newpath = 'C:/temp/cc-file-uploads/';
+                newpath += file.fileupload.originalFilename;
+
+                //Copy the uploaded file to a custom folder
+                if (fs.existsSync(filepth)) {
+                    fs.rename(filepth, newpath, function () {
+                        //Send a NodeJS file upload confirmation message
+                        res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': data.length });
+                        res.write('NodeJS File Upload Success! ('+newpath+')');
+                        res.end();
+                    });
+                } else {
+                    res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': data.length });
+                    res.write('NodeJS File Upload Failed!');
+                    res.end();
+                }
+            }catch (e){
+                console.log(e.message);
+            }
+        });
+  
+    }
+    //Process the file upload in Node
+    else if (reqUrl.toLowerCase() == 'check-status') {
+        res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': data.length });
+        res.write('Checking status!');
         res.end();
     }
     else if (fs.existsSync(reqUrl)) {
