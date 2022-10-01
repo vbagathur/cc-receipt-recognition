@@ -18,6 +18,8 @@ if(process.env.NODE_ENV == "production"){
 var server = http.createServer(function (req, res) {
     var reqUrl = req.url.replace(/^\/+|\/+$/g, '');
 
+    console.log('reqUrl:' + reqUrl);
+
     //Create an instance of the form object
     let form = new formidable.IncomingForm();
     if(!reqUrl || (!!reqUrl && (reqUrl == "" || reqUrl.toLowerCase() == "index.html"))){
@@ -62,7 +64,7 @@ var server = http.createServer(function (req, res) {
 
             try {
 
-                let newpath = 'C:/temp/cc-file-uploads/';
+                let newpath = '~/';
                 newpath += file.fileupload.originalFilename;
 
                 //Copy the uploaded file to a custom folder
@@ -86,6 +88,7 @@ var server = http.createServer(function (req, res) {
     }
     //Process the file upload in Node
     else if (reqUrl.toLowerCase() == 'check-status') {
+                console.log(e.message);
         res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': data.length });
         res.write('Checking status!');
         res.end();
